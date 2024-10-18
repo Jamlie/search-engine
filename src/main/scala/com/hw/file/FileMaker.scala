@@ -11,31 +11,26 @@ class FileMaker(val sc: SparkContext) {
     val sep = File.separator
     val allFiles = s"${sentencesDir}${sep}*"
 
-    val txtFilesRDD = sc.wholeTextFiles(allFiles)
-
-    val wordDocPairs = txtFilesRDD.flatMap({
-      case (filePath, content) =>
-        val words = content.split("\\s+")
-          .map(_.replaceAll(",", ""))
-          .filter(_.nonEmpty).map(_.toLowerCase)
-        words.distinct.map(word => (word, filePath.split("/").last))
-    })
-
-    val wordToDocList = wordDocPairs
-      .groupByKey()
+    sc.wholeTextFiles(allFiles)
+      .flatMap {
+        case (filePath, content) =>
+          content.split("\\s+")
+            .map(_.replaceAll(",", ""))
+            .filter(_.nonEmpty)
+            .map(_.toLowerCase)
+            .distinct
+            .map(word => (word, filePath.split("/").last))
+      }
+      .groupByKey
       .mapValues(docList => docList.toSet.toList.sorted)
-
-    val invertedIndex = wordToDocList.map({
-      case (word, doc) => (word, doc.size, doc.mkString(", "))
-    })
-
-    val sortedInvertedIndex = invertedIndex.sortBy(_._1)
-
-    val formattedOutput = sortedInvertedIndex.map {
-      case (word, count, docs) => s"$word, $count, $docs"
-    }
-
-    formattedOutput.coalesce(1, shuffle = true)
+      .map {
+        case (word, doc) => (word, doc.size, doc.mkString(", "))
+      }
+      .sortBy(_._1)
+      .map {
+        case (word, count, docs) => s"$word, $count, $docs"
+      }
+      .coalesce(1, shuffle = true)
       .saveAsTextFile(s"${Paths.get(".").toString}${sep}$outputFileName")
   }
 }

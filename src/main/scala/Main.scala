@@ -1,10 +1,10 @@
 import com.hw.convertor.TokenParser
 import com.hw.db.Database
 import com.hw.file.FileMaker
-import com.hw.query.Query
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.varia.NullAppender
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 import java.nio.file.Paths
 import scala.util.{Failure, Success, Try}
@@ -13,17 +13,16 @@ object Main {
   def main(args: Array[String]): Unit = {
     BasicConfigurator.configure(new NullAppender())
 
-    val sc = SparkInitializer.init()
-    val session = SparkInitializer.initSession()
+    val sc = SparkInitializer.init
+    val session = SparkInitializer.initSession
 
     val outputDir = unwrap(Try(Paths.get(".", "output").toString))
     val outputFile = unwrap(Try(Paths.get(outputDir, "part-00000").toString))
     val jsonFileOutput = unwrap(Try(Paths.get(".", "invertedIndexJSON").toString))
 
     createTxtFile(sc, outputDir)
-    txtToJson(outputFile, jsonFileOutput)
+    txtToJson(session, outputFile, jsonFileOutput)
     Database.upload(session, jsonFileOutput)
-    Query.build(session)
 
     session.stop()
     sc.stop()
@@ -35,8 +34,8 @@ object Main {
       fileMaker.make(sentencesDir, outputFile)
   }
 
-  private def txtToJson(outputFile: String, jsonFileOutput: String): Unit = {
-    TokenParser.json(SparkInitializer.initSession(), outputFile, jsonFileOutput)
+  private def txtToJson(session: SparkSession, outputFile: String, jsonFileOutput: String): Unit = {
+    TokenParser.json(session, outputFile, jsonFileOutput)
   }
 
   private def unwrap[T](optional: Try[T]): T = {
