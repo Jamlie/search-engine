@@ -3,14 +3,12 @@ package com.hw.convertor
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 
-object TokenParser {
-  def json(session: SparkSession, path: String, jsonFilePath: String): Unit = {
+object JSONTokenizer {
+  def tokenizeTxtFile(session: SparkSession, path: String, jsonFilePath: String): Unit = {
     val dataFrame = session.read.text(path)
-
     val structuredDataFrame = parseData(dataFrame)
 
     structuredDataFrame.show(false)
-
     saveAsJson(structuredDataFrame, jsonFilePath)
   }
 

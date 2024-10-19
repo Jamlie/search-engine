@@ -20,7 +20,7 @@ object Client {
         sys.exit
       }
       case Success(value) => {
-        fmt.println(value)
+        fmt.println(s"Word is found in docs: ${value.mkString("Array(", ", ", ")")}")
       }
     }
   }

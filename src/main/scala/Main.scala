@@ -1,4 +1,4 @@
-import com.hw.convertor.TokenParser
+import com.hw.convertor.JSONTokenizer
 import com.hw.db.Database
 import com.hw.file.FileMaker
 import org.apache.log4j.BasicConfigurator
@@ -35,7 +35,7 @@ object Main {
   }
 
   private def txtToJson(session: SparkSession, outputFile: String, jsonFileOutput: String): Unit = {
-    TokenParser.json(session, outputFile, jsonFileOutput)
+    JSONTokenizer.tokenizeTxtFile(session, outputFile, jsonFileOutput)
   }
 
   private def unwrap[T](optional: Try[T]): T = {

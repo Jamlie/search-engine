@@ -24,13 +24,13 @@ object Database {
 
     wordsDataFrame.show(false)
 
-    val queryWords = words.toLowerCase.split(" ")
+    val queries = words.toLowerCase.split(" ")
 
     val filteredDataFrame = wordsDataFrame
-      .filter(col("word").isin(queryWords: _*))
+      .filter(col("word").isin(queries: _*))
       .select(col("word"), explode(col("document_list")).as("doc"))
 
-    val resultDocs = filterBasedOnWords(filteredDataFrame, queryWords)
+    val resultDocs = filterBasedOnWords(filteredDataFrame, queries)
 
     if (resultDocs.isEmpty) {
       return Failure(new Exception("No docs contain all queried words"))
@@ -42,7 +42,7 @@ object Database {
   private def filterBasedOnWords(filteredDataFrame: DataFrame, queryWords: Array[String]) = filteredDataFrame
       .groupBy("doc")
       .agg(collect_set("word").as("words"))
-      .filter(size(col("words")) === queryWords)
+      .filter(size(col("words")) === queryWords.length)
       .select("doc")
       .collect()
       .map(_.toString())
